@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VtuWeb Menu PNG - Personalización</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #6A5D72;
+            color: #C4FF85;
+        }
+        h1 {
+            text-indent: -9999px;
+            margin: 0 auto;
+            padding: 0;
+        }
+        #pngito {
+            width: 600px;
+            height: 600px;
+            display: block;
+            margin: 0 auto;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .drop-zone {
+            width: 250px;
+            height: 250px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #666;
+            position: relative;
+        }
+        .drop-zone img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .file-input {
+            display: none;
+        }
+        #start-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #ccc;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #start-btn.enabled {
+            background-color: #28a745;
+            cursor: pointer;
+        }
+        #avatar-container {
+            margin-top: 20px;
+            width: 330px;
+            height: 330px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+        }
+        #avatar-status {
+            width: 100%;
+            height: 100%;
+        }
+        .settings {
+            margin-top: 20px;
+            display: block; /* Se asegura que la interfaz de configuración sea visible */
+        }
+        .noise-level {
+            width: 200px;
+            height: 10px;
+            background-color: #ccc;
+            border-radius: 5px;
+            margin: 10px auto;
+            position: relative;
+        }
+        .noise-indicator {
+            height: 100%;
+            background-color: gray;
+            border-radius: 5px;
+        }
+        .label {
+            position: absolute;
+            bottom: 10px;
+            color: #C4FF85;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        #ouby-img {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 100px;
+            height: auto;
+        }
+        .blink-speed {
+            margin-top: 20px;
+        }
+        .blink-speed label {
+            color: #C4FF85;
+            font-size: 14px;
+        }
+        .blink-speed input {
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1><img id="pngito" src="pngito.png" alt="PNGito"></h1>
+    <p>Selecciona tus imágenes para los estados del avatar:</p>
+    <img id="ouby-img" src="ouby.png" alt="Ouby">
+    <div class="container">
+        <div id="quieto-zone" class="drop-zone">
+            <span class="label">Quieto</span>
+            <img id="quieto-img" src="awuakato1.png" alt="Quieto" class="default-image">
+            <input type="file" id="file-quieto" class="file-input" accept="image/*">
+        </div>
+        <div id="parpadear-zone" class="drop-zone">
+            <span class="label">Parpadear</span>
+            <img id="parpadear-img" src="awuakato3.png" alt="Parpadear" class="default-image">
+            <input type="file" id="file-parpadear" class="file-input" accept="image/*">
+        </div>
+        <div id="hablar-zone" class="drop-zone">
+            <span class="label">Hablar</span>
+            <img id="hablar-img" src="awuakato2.png" alt="Hablar" class="default-image">
+            <input type="file" id="file-hablar" class="file-input" accept="image/*">
+        </div>
+    </div>
+    <button id="start-btn">Iniciar</button>
+    <div class="settings" id="settings">
+        <label>Color de fondo:
+            <input type="color" id="bg-color-picker" value="#ffffff">
+        </label>
+        <br>
+        <label>Sensibilidad del micrófono:
+            <input type="range" id="sensitivity-range" min="0" max="100" value="20">
+        </label>
+        <div class="noise-level">
+            <div id="noise-indicator" class="noise-indicator"></div>
+        </div>
+        <div class="blink-speed">
+            <label>Intervalo de parpadeo (segundos):
+                <input type="range" id="blink-interval" min="0.1" max="1" step="0.1" value="0.5">
+            </label>
+        </div>
+    </div>
+    <div id="avatar-container" style="background-color: #ffffff;">
+        <img id="avatar-status" src="awuakato1.png" alt="Avatar">
+    </div>
+    <script>
+        const quietoZone = document.getElementById('quieto-zone');
+        const parpadearZone = document.getElementById('parpadear-zone');
+        const hablarZone = document.getElementById('hablar-zone');
+        const startButton = document.getElementById('start-btn');
+        const avatarStatus = document.getElementById('avatar-status');
+        const bgColorPicker = document.getElementById('bg-color-picker');
+        const sensitivityRange = document.getElementById('sensitivity-range');
+        const noiseIndicator = document.getElementById('noise-indicator');
+        const avatarContainer = document.getElementById('avatar-container');
+        const settings = document.getElementById('settings');
+        const blinkIntervalSlider = document.getElementById('blink-interval');
+        
+        let quietoImg = "awuakato1.png", parpadearImg = "awuakato3.png", hablarImg = "awuakato2.png";
+        let audioContext, analyser, microphone, dataArray;
+        let talkingDetected = false;
+        let sensitivityThreshold = 20;
+        let currentState = 'quieto';
+        let blinkInterval = 500;  // Intervalo de parpadeo en milisegundos
+        let blinkTimer;
+
+        // Cargar imágenes predeterminadas al inicio
+        function loadDefaultImages() {
+            document.getElementById('quieto-img').src = quietoImg;
+            document.getElementById('parpadear-img').src = parpadearImg;
+            document.getElementById('hablar-img').src = hablarImg;
+            checkImagesSelected();
+        }
+
+        function loadImage(fileInput, zone, type) {
+            const file = fileInput.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    zone.innerHTML = `<img src="${e.target.result}" alt="${type}">`;
+                    if (type === 'quieto') quietoImg = e.target.result;
+                    if (type === 'parpadear') parpadearImg = e.target.result;
+                    if (type === 'hablar') hablarImg = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function checkImagesSelected() {
+            // Si todas las imágenes están seleccionadas, habilitar el botón Iniciar
+            startButton.disabled = false;
+            startButton.classList.add('enabled');
+        }
+
+        quietoZone.addEventListener('click', () => document.getElementById('file-quieto').click());
+        parpadearZone.addEventListener('click', () => document.getElementById('file-parpadear').click());
+        hablarZone.addEventListener('click', () => document.getElementById('file-hablar').click());
+
+        document.getElementById('file-quieto').addEventListener('change', (e) => loadImage(e.target, quietoZone, 'quieto'));
+        document.getElementById('file-parpadear').addEventListener('change', (e) => loadImage(e.target, parpadearZone, 'parpadear'));
+        document.getElementById('file-hablar').addEventListener('change', (e) => loadImage(e.target, hablarZone, 'hablar'));
+
+        // Configuración de la interfaz
+        bgColorPicker.addEventListener('input', (e) => {
+            document.body.style.backgroundColor = e.target.value;
+            avatarContainer.style.backgroundColor = e.target.value;
+        });
+
+        sensitivityRange.addEventListener('input', (e) => {
+            sensitivityThreshold = e.target.value;
+        });
+
+        // Activar micrófono
+        function setupMicrophone() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('Microphone access is not supported in this browser.');
+                return;
+            }
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then((stream) => {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    microphone = audioContext.createMediaStreamSource(stream);
+                    microphone.connect(analyser);
+                    analyser.fftSize = 256;
+                    dataArray = new Uint8Array(analyser.frequencyBinCount);
+                    detectAudio();
+                })
+                .catch((err) => alert('Error accessing microphone: ' + err));
+        }
+
+        function detectAudio() {
+            analyser.getByteFrequencyData(dataArray);
+            let total = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                total += dataArray[i];
+            }
+            const average = total / dataArray.length;
+            noiseIndicator.style.width = `${average}%`;
+
+            if (average > sensitivityThreshold) {
+                if (!talkingDetected) {
+                    talkingDetected = true;
+                    avatarStatus.src = hablarImg;
+                }
+            } else {
+                if (talkingDetected) {
+                    talkingDetected = false;
+                    avatarStatus.src = currentState === 'quieto' ? quietoImg : parpadearImg;
+                }
+            }
+
+            setTimeout(detectAudio, 50);
+        }
+
+        blinkIntervalSlider.addEventListener('input', () => {
+            clearInterval(blinkTimer);
+            blinkInterval = blinkIntervalSlider.value * 1000;
+            startBlinking();
+        });
+
+        function startBlinking() {
+            blinkTimer = setInterval(() => {
+                avatarStatus.src = parpadearImg;
+                setTimeout(() => {
+                    avatarStatus.src = currentState === 'quieto' ? quietoImg : parpadearImg;
+                }, blinkInterval / 2);
+            }, blinkInterval);
+        }
+
+        loadDefaultImages(); // Cargar imágenes predeterminadas al iniciar
+        setupMicrophone();
+    </script>
+</body>
+</html>

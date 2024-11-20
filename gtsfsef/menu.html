@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VtuWeb Menu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #6a5f72;
+        }
+        .logo {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+        .boton-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px; /* Más espacio entre los botones */
+            max-width: 700px;
+        }
+        .boton-cuadrado {
+            width: 180px; /* Más grande */
+            height: 110px; /* Más grande */
+            background-color: #4CAF50;
+            color: white;
+            font-size: 24px; /* Ajuste del texto proporcional */
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3); /* Más sombra */
+        }
+        .boton-cuadrado:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        .boton-cuadrado img {
+            width: 80px; /* Imágenes más grandes */
+            height: 80px; /* Imágenes más grandes */
+        }
+    </style>
+</head>
+<body>
+
+    <img src="mamadas_varias/ouby.png" alt="OuBy Logo" class="logo">
+
+    <div class="boton-container">
+        <button class="boton-cuadrado" id="btnSub" onclick="abrirSub()">
+            <img src="mamadas_varias/subti.png" alt="Sub Botón">
+        </button>
+        <button class="boton-cuadrado" id="btnVentana2" onclick="abrirPng()">
+            <img src="mamadas_varias/lib1.png" alt="Ventana 2 Botón">
+        </button>
+        <button class="boton-cuadrado" id="btnVentana3">
+            <img src="mamadas_varias/miky.png" alt="Ventana 3 Botón">
+        </button>
+        <button class="boton-cuadrado" id="btnVentana4">
+            <img src="mamadas_varias/lib1.png" alt="Ventana 4 Botón" id="imagenAnimada">
+        </button>
+    </div>
+
+    <script>
+        // Animación para el botón 4
+        const imagenAnimada = document.getElementById('imagenAnimada');
+        const imagenes = ['mamadas_varias/lib1.png', 'mamadas_varias/lib2.png', 'mamadas_varias/lib3.png'];
+        let indice = 0;
+
+        setInterval(() => {
+            indice = (indice + 1) % imagenes.length; // Ciclo infinito entre 0, 1 y 2
+            imagenAnimada.src = imagenes[indice];
+        }, 200); // Cambia cada 200 ms
+
+        // Función para abrir sub.html en una nueva ventana
+        function abrirSub() {
+            window.open('mamadas_varias/sub.html', '_blank');
+        }
+
+        // Función para abrir png.html en una nueva ventana
+        function abrirPng() {
+            window.open('mamadas_varias/png.html', '_blank');
+        }
+    </script>
+</body>
+</html>
